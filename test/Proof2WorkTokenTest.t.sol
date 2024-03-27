@@ -5,16 +5,16 @@ import {Test, console} from "forge-std/Test.sol";
 import "../src/Proof2WorkToken.sol"; // Adjust the path according to your project structure
 
 contract Proof2WorkTest is Test {
-    Proof2Work public proof2Work;
+    Proof2WorkToken public proof2Work;
     address safeWallet = address(1);
     address initialOwner = address(this);
 
     function setUp() public {
-        proof2Work = new Proof2Work();
+        proof2Work = new Proof2WorkToken();
         proof2Work.initialize(initialOwner, safeWallet);
     }
 
-    function testInitialMint() public {
+    function testInitialMint() public view {
         // Test initial minting to the safe wallet
         uint256 expectedBalance = 1000000000 * 10 ** proof2Work.decimals();
         assertEq(proof2Work.balanceOf(safeWallet), expectedBalance, "Initial minting failed");

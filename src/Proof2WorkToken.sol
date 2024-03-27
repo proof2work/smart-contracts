@@ -2,14 +2,14 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Upgradeable.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
-import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
-import "lib/openzeppelin-contracts/contracts/access/OwnableUpgradeable.sol";
-import "lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 
-contract Proof2Work is Initializable, ERC20Upgradeable, ERC20PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable {
+contract Proof2WorkToken is Initializable, ERC20Upgradeable, ERC20PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable {
 
     address public safeWallet;
 
