@@ -2,25 +2,30 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Upgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/access/OwnableUpgradeable.sol";
+import "lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+
 
 contract Proof2Work is Initializable, ERC20Upgradeable, ERC20PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable {
+
+    address public safeWallet;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address initialOwner) initializer public {
+    function initialize(address initialOwner, address _safeWallet) initializer public {
         __ERC20_init("Proof2Work", "P2W");
         __ERC20Pausable_init();
         __Ownable_init(initialOwner);
         __ERC20Permit_init("Proof2Work");
 
-        _mint(msg.sender, 1000000000 * 10 ** decimals());
+        safeWallet = _safeWallet;
+        _mint(safeWallet, 1000000000 * 10 ** decimals());
     }
 
     function pause() public onlyOwner {
@@ -33,6 +38,14 @@ contract Proof2Work is Initializable, ERC20Upgradeable, ERC20PausableUpgradeable
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
+    }
+
+    function claim() public {
+        uint256 amount = 10 * 10 ** decimals();
+        require(balanceOf(safeWallet) >= amount, "Contract does not have enough tokens to burn");
+        require(balanceOf(msg.sender) == 10, "Proof2Work: you already claimed your tokens");
+        _burn(safeWallet, amount);
+        _mint(msg.sender, amount);
     }
 
     // The following functions are overrides required by Solidity.
