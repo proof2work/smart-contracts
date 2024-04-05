@@ -2,55 +2,89 @@
 pragma solidity ^0.8.20;
 
 import {Test, console} from "forge-std/Test.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import "../src/Proof2WorkToken.sol"; // Adjust the path according to your project structure
 
 contract Proof2WorkTest is Test {
-    Proof2WorkToken public proof2Work;
-    address safeWallet = address(1);
-    address initialOwner = address(this);
+    Proof2WorkToken public proxy;
+    address implementationAddress;
+    address proxyAddress;
+    address owner = address(1);
 
     function setUp() public {
-        proof2Work = new Proof2WorkToken();
-        proof2Work.initialize(initialOwner, safeWallet);
+        address _proxyAddress = Upgrades.deployTransparentProxy(
+            "Proof2WorkToken.sol",
+            owner,
+            abi.encodeCall(Proof2WorkToken.initialize, (owner))
+        );
+
+        implementationAddress = Upgrades.getImplementationAddress(
+            _proxyAddress
+        );
+        proxyAddress = _proxyAddress;
+        proxy = Proof2WorkToken(proxyAddress);
+    }
+
+    function testOwnerships() public view {
+        // Test ownerships
+        assertEq(
+            proxy.owner(),
+            owner,
+            "Owner of the contract is not the expected owner"
+        );
     }
 
     function testInitialMint() public view {
         // Test initial minting to the safe wallet
-        uint256 expectedBalance = 1000000000 * 10 ** proof2Work.decimals();
-        assertEq(proof2Work.balanceOf(safeWallet), expectedBalance, "Initial minting failed");
+        uint256 expectedBalance = 1000000000 * 10 ** proxy.decimals();
+        assertEq(
+            proxy.balanceOf(owner),
+            expectedBalance,
+            "Initial minting failed"
+        );
     }
 
     function testPauseAndUnpause() public {
         // Test pausing and unpausing the contract
-        proof2Work.pause();
-        assertTrue(proof2Work.paused(), "Contract should be paused");
+        vm.prank(owner); // Prank the safe wallet to allow pausing
+        proxy.pause();
+        assertTrue(proxy.paused(), "Contract should be paused");
 
-        proof2Work.unpause();
-        assertFalse(proof2Work.paused(), "Contract should be unpaused");
+        vm.prank(owner); // Prank the safe wallet to allow pausing
+        proxy.unpause();
+        assertFalse(proxy.paused(), "Contract should be unpaused");
     }
 
     function testClaim() public {
         // Prepare for claim test
+        uint256 expectedBalance = 10 * 10 ** proxy.decimals(); // Should have 20 tokens after claim
+        uint256 initBalance = 1000000000 * 10 ** proxy.decimals();
         address claimer = address(2);
-        vm.prank(safeWallet);
-        proof2Work.mint(claimer, 10 * 10 ** proof2Work.decimals()); // Ensuring claimer has exactly 10 tokens
-
-        // Test claim function
-        vm.startPrank(claimer);
-        proof2Work.claim();
-        uint256 expectedBalance = 20 * 10 ** proof2Work.decimals(); // Should have 20 tokens after claim
-        assertEq(proof2Work.balanceOf(claimer), expectedBalance, "Claim did not mint the correct amount of tokens");
-
-        // Cleanup
-        vm.stopPrank();
+        vm.prank(claimer);
+        proxy.claim(); // Ensuring claimer has now 10 tokens
+        assertEq(
+            proxy.balanceOf(claimer),
+            expectedBalance,
+            "Claimer does not have the expected balance of tokens"
+        );
+        assertLt(
+            proxy.balanceOf(owner),
+            initBalance,
+            "Owner did not loose tokens during the claim"
+        );
     }
 
     function testMint() public {
         // Test minting additional tokens
         address recipient = address(3);
-        uint256 mintAmount = 500 * 10 ** proof2Work.decimals();
-        proof2Work.mint(recipient, mintAmount);
+        uint256 mintAmount = 500 * 10 ** proxy.decimals();
+        vm.prank(owner);
+        proxy.mint(recipient, mintAmount);
 
-        assertEq(proof2Work.balanceOf(recipient), mintAmount, "Minting did not allocate the correct amount of tokens");
+        assertEq(
+            proxy.balanceOf(recipient),
+            mintAmount,
+            "Minting did not allocate the correct amount of tokens"
+        );
     }
 }

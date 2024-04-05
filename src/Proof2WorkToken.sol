@@ -11,21 +11,18 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract Proof2WorkToken is Initializable, ERC20Upgradeable, ERC20PausableUpgradeable, OwnableUpgradeable, ERC20PermitUpgradeable {
 
-    address public safeWallet;
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address initialOwner, address _safeWallet) initializer public {
+    function initialize(address initialOwner) initializer public {
         __ERC20_init("Proof2Work", "P2W");
         __ERC20Pausable_init();
         __Ownable_init(initialOwner);
         __ERC20Permit_init("Proof2Work");
 
-        safeWallet = _safeWallet;
-        _mint(safeWallet, 1000000000 * 10 ** decimals());
+        _mint(initialOwner, 1000000000 * 10 ** decimals());
     }
 
     function pause() public onlyOwner {
@@ -42,9 +39,9 @@ contract Proof2WorkToken is Initializable, ERC20Upgradeable, ERC20PausableUpgrad
 
     function claim() public {
         uint256 amount = 10 * 10 ** decimals();
-        require(balanceOf(safeWallet) >= amount, "Contract does not have enough tokens to burn");
-        require(balanceOf(msg.sender) == 10, "Proof2Work: you already claimed your tokens");
-        _burn(safeWallet, amount);
+        require(balanceOf(owner()) >= amount, "Contract does not have enough tokens to burn");
+        require(balanceOf(msg.sender) < amount, "Proof2Work: you already claimed your tokens");
+        _burn(owner(), amount);
         _mint(msg.sender, amount);
     }
 
