@@ -8,5 +8,11 @@ build_info = true
 extra_output = ["storageLayout"]
 solc = "0.8.25"
 
+[rpc_endpoints]
+mumbai = "https://rpc-amoy.polygon.technology"
+sepolia = "${SEPOLIA_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
